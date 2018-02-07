@@ -42,6 +42,7 @@ defmodule IslandsEngineTest do
 
     assert Game.guess_coordinate(game, :player1, 5, 5) == {:miss, :none, :no_win}
     assert Game.guess_coordinate(game, :player1, 3, 1) == :error
+    
     assert Game.guess_coordinate(game, :player2, 1, 1) == {:hit, :dot, :win}
   end
 end
