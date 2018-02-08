@@ -110,12 +110,21 @@ defmodule IslandsEngine.Game do
     {:noreply, state_data, @timeout}
   end
 
+  def terminate({:shutdown, :timeout}, state_data) do
+    :ets.delete(:game_state, state_data.player1.name)
+    :ok
+  end
+  def terminate(_reason, _state), do: :ok
+
   defp update_player2_name(state_data, name), do:
     put_in(state_data.player2.name, name)
+
   defp update_rules(state_data, rules), do:
     %{state_data | rules: rules}
+
   defp update_board(state_data, player, board), do:
     Map.update!(state_data, player, fn player -> %{player | board: board} end)
+
   defp reply_success(state_data, reply) do
     :ets.insert(:game_state, {state_data.player1.name, state_data})
     {:reply, reply, state_data, @timeout}

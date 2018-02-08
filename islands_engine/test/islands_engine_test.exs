@@ -67,6 +67,14 @@ defmodule IslandsEngineTest do
     assert GenServer.whereis(via) == nil
   end
 
+  test "GenServer for Game is cleaned up on GameSupervisor.stop_game" do
+    {:ok, _game} = new_game()
+    via = Game.via_tuple("wibble")
+    assert via == {:via, Registry, {Registry.Game, "wibble"}}
+    GameSupervisor.stop_game("wibble")
+    assert :ets.lookup(:game_state, "wibble") == []
+  end
+
   defp new_game() do
     {:ok, _game} = GameSupervisor.start_game("wibble")
   end
