@@ -1,6 +1,6 @@
 defmodule IslandsEngineTest do
   use ExUnit.Case
-  alias IslandsEngine.{Rules, Game}
+  alias IslandsEngine.{Rules, Game, GameSupervisor}
   doctest IslandsEngine
   doctest Rules
 
@@ -44,5 +44,38 @@ defmodule IslandsEngineTest do
     assert Game.guess_coordinate(game, :player1, 3, 1) == :error
     
     assert Game.guess_coordinate(game, :player2, 1, 1) == {:hit, :dot, :win}
+  end
+
+  test "supervisor starts game process" do
+    {:ok, _game} = new_game()
+    assert Supervisor.count_children(GameSupervisor) == %{active: 1, specs: 1, supervisors: 0, workers: 1}
+    GameSupervisor.stop_game("wibble")
+  end
+
+  test "supervisor stops game process" do
+    {:ok, game} = new_game()
+    GameSupervisor.stop_game("wibble")
+    assert Process.alive?(game) == false
+  end
+
+  test "no other process is registered with 'name' in Game.via_tuple" do
+    {:ok, _game} = new_game()
+    GameSupervisor.start_game("wibble")
+    via = Game.via_tuple("wibble")
+    assert via == {:via, Registry, {Registry.Game, "wibble"}}
+    GameSupervisor.stop_game("wibble")
+    assert GenServer.whereis(via) == nil
+  end
+
+  test "GenServer for Game is cleaned up on GameSupervisor.stop_game" do
+    {:ok, _game} = new_game()
+    via = Game.via_tuple("wibble")
+    assert via == {:via, Registry, {Registry.Game, "wibble"}}
+    GameSupervisor.stop_game("wibble")
+    assert :ets.lookup(:game_state, "wibble") == []
+  end
+
+  defp new_game() do
+    {:ok, _game} = GameSupervisor.start_game("wibble")
   end
 end
