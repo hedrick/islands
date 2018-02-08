@@ -116,6 +116,17 @@ defmodule IslandsEngine.Game do
   end
   def terminate(_reason, _state), do: :ok
 
+  def position_island(game, player, key, row, col) when player in @players, do:
+    GenServer.call(game, {:position_island, player, key, row, col})
+
+  def set_islands(game, player) when player in @players, do:
+    GenServer.call(game, {:set_islands, player})
+
+  def guess_coordinate(game, player, row, col) when player in @players, do:
+    GenServer.call(game, {:guess_coordinate, player, row, col})
+  
+  defp player_board(state_data, player), do: Map.get(state_data, player).board
+
   defp update_player2_name(state_data, name), do:
     put_in(state_data.player2.name, name)
 
@@ -134,18 +145,7 @@ defmodule IslandsEngine.Game do
     player1 = %{name: name, board: Board.new(), guesses: Guesses.new()}
     player2 = %{name: nil, board: Board.new(), guesses: Guesses.new()}
     %{player1: player1, player2: player2, rules: %Rules{}}
-  end
-
-  def position_island(game, player, key, row, col) when player in @players, do:
-    GenServer.call(game, {:position_island, player, key, row, col})
-  
-  defp player_board(state_data, player), do: Map.get(state_data, player).board
-
-  def set_islands(game, player) when player in @players, do:
-    GenServer.call(game, {:set_islands, player})
-
-  def guess_coordinate(game, player, row, col) when player in @players, do:
-    GenServer.call(game, {:guess_coordinate, player, row, col})
+  end    
 
   defp opponent(:player1), do: :player2
   defp opponent(:player2), do: :player1
